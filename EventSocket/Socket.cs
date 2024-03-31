@@ -21,6 +21,8 @@ namespace EventSocket
         public StreamReader Reader;
         public StreamWriter Writer;
 
+        public Dictionary<string, Action<string>> Events = new();
+
         public Socket(SocketType socketType, string hostname, int port)
         {
             if (socketType == SocketType.Server)
@@ -44,23 +46,33 @@ namespace EventSocket
             Reader = new StreamReader(Stream);
             Writer = new StreamWriter(Stream);
 
-            _ = Task.Run(() => HandleMessages());
+            _ = Task.Run(() => HandleRequests());
         }
 
-        public void HandleMessages()
+        public void On(string key, Action<string> value)
         {
-            while (true)
+            Events[key] = value;
+        }
+
+        public void Emit(string key, string argument)
+        {
+            Writer.WriteLine(key + '|' + argument);
+            Writer.Flush();
+        }
+
+        public void HandleRequests()
+        {
+            while(true)
             {
                 string? message = Reader.ReadLine();
 
-                Console.WriteLine(message);
-            }
-        }
+                if (message is not null)
+                {
+                    string[] strings = message.Split('|');
 
-        public void Write(string message)
-        {
-            Writer.WriteLine(message);
-            Writer.Flush();
+                    Events[strings[0]].Invoke(strings[1]);
+                }
+            }
         }
 
         ~Socket()

@@ -5,9 +5,11 @@ const int port = 8080;
 
 Socket socket = new Socket(SocketType.Server, hostname, port);
 
-socket.Write("Hello from Server");
+socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
+
+socket.Emit("MessageToClient", "Hello");
 Thread.Sleep(1000);
-socket.Write("Hello from Server");
+socket.Emit("MessageToClient", "My name is Yehor");
 Thread.Sleep(1000);
-socket.Write("Hello from Server");
+socket.Emit("MessageToClient", "Good Luck!");
 Thread.Sleep(1000);
