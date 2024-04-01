@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EventSocket.Sockets
 {
-    public class ServerSocket<T, K> : Socket<T, K>
+    public class ServerSocket : Socket
     {
         public TcpListener Listener { get; set; }
         public List<TcpClient> Clients { get; set; } = new List<TcpClient>();
@@ -41,7 +41,7 @@ namespace EventSocket.Sockets
         }
 
         //Sending Message to everybody who is connected to Server
-        protected override void SendMessage(SocketMessage<T, K> socketMessage)
+        protected override void SendMessage(SocketMessageText socketMessage)
         {
             foreach (var client in Clients)
             {

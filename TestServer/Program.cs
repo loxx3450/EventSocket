@@ -4,7 +4,7 @@ using EventSocket.Sockets;
 const string hostname = "127.0.0.1";
 const int port = 8080;
 
-Socket<string, string> socket = new ServerSocket<string, string>(hostname, port);
+Socket socket = new ServerSocket(hostname, port);
 
 socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
 

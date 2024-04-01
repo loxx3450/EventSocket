@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace EventSocket.Sockets
 {
-    public class ClientSocket<T, K> : Socket<T, K>
+    public class ClientSocket : Socket
     {
         public TcpClient Client { get; set; }
-        public NetworkStream Stream { get; set; }
+        public NetworkStream ServerStream { get; set; }
 
         public ClientSocket(string hostname, int port)
             : base(hostname, port)
@@ -22,21 +22,21 @@ namespace EventSocket.Sockets
 
             Client.Connect(hostname, port);
 
-            Stream = Client.GetStream();
+            ServerStream = Client.GetStream();
 
             //Client is waiting for incoming messages
-            _ = Task.Run(() => HandleRequests(Stream));
+            _ = Task.Run(() => HandleRequests(ServerStream));
         }
 
         //Sending Message to Server
-        protected override void SendMessage(SocketMessage<T, K> socketMessage)
+        protected override void SendMessage(SocketMessageText socketMessage)
         {
-            socketMessage.GetStream().CopyTo(Stream);
+            socketMessage.GetStream().CopyTo(ServerStream);
         }
 
         ~ClientSocket()
         {
-            Stream?.Close();
+            ServerStream?.Close();
             Client?.Close();
         }
     }

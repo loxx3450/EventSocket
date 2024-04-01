@@ -5,10 +5,10 @@ using System.Text;
 
 namespace EventSocket.Sockets
 {
-    public abstract class Socket<T, K>
+    public abstract class Socket
     {
         //Dictionary of Events
-        public Dictionary<T, Action<K>> Events { get; set; } = [];
+        public Dictionary<string, Action<string>> Actions { get; set; } = [];
 
         public Socket(string hostname, int port)
         {
@@ -17,12 +17,12 @@ namespace EventSocket.Sockets
 
         public abstract void Init(string hostname, int port);
 
-        public void On(T key, Action<K> value)
+        public void On(string key, Action<string> action)
         {
-            Events[key] = value;
+            Actions[key] = action;
         }
 
-        public void Emit(SocketMessage<T, K> socketMessage)
+        public void Emit(SocketMessageText socketMessage)
         {
             try
             {
@@ -34,8 +34,7 @@ namespace EventSocket.Sockets
             }
         }
 
-        protected abstract void SendMessage(SocketMessage<T, K> socketMessage);
-
+        protected abstract void SendMessage(SocketMessageText socketMessage);
 
         //Stream gets incoming messages, interprets them and executes suitable callback
         public void HandleRequests(NetworkStream stream)
@@ -51,28 +50,30 @@ namespace EventSocket.Sockets
                     memoryStream.Write(ReadBytes(stream, messageLength), 0, messageLength);
                     memoryStream.Position = 0;
 
-                    //Interpretation                                                    //TODO: should be automatic
-                    object key = null!;
-                    object argument = null!;
+                    #region interpretation in case of genetic message
+                    ////Interpretation                                                    //TODO: should be automatic
+                    //object key = null!;
+                    //object argument = null!;
 
-                    if (nameof(T) is string && nameof(K) is string)
-                    {
-                        SocketMessageText message = new SocketMessageText(memoryStream);
+                    //if (nameof(T) is string && nameof(K) is string)
+                    //{
+                    //    SocketMessageText message = new SocketMessageText(memoryStream);
 
-                        key = message.Key;
-                        argument = message.Argument;
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    //    key = message.Key;
+                    //    argument = message.Argument;
+                    //}
+                    //else
+                    //{
+                    //    continue;
+                    //}
+                    #endregion
+
+                    SocketMessageText message = new SocketMessageText(memoryStream);
 
                     //Executing callback
-                    Action<K> value;
-
-                    if (Events.TryGetValue((T)key, out value))
+                    if (Actions.ContainsKey(message.Key))
                     {
-                        value.Invoke((K)argument);
+                        Actions[message.Key].Invoke(message.Argument);
                     }
                 }
                 catch (Exception ex)
