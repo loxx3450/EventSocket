@@ -7,9 +7,8 @@ Socket socket = new Socket(SocketType.Server, hostname, port);
 
 socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
 
-socket.Emit("MessageToClient", "Hello");
-Thread.Sleep(1000);
-socket.Emit("MessageToClient", "My name is Yehor");
-Thread.Sleep(1000);
-socket.Emit("MessageToClient", "Good Luck!");
-Thread.Sleep(1000);
+while (true)
+{
+    Console.ReadLine();
+    socket.Emit("MessageToClient", "Hello");
+}

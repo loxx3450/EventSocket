@@ -13,26 +13,27 @@ namespace EventSocket
 
     public class Socket
     {
-        public TcpListener? Listener;
-        public TcpClient? Client;
+        public SocketType Type { get; set; }
 
-        public NetworkStream Stream;
+        public TcpListener? Listener { get; set; }
+        public List<TcpClient>? Clients { get; set; } = new List<TcpClient>();
 
-        public StreamReader Reader;
-        public StreamWriter Writer;
+        public TcpClient? Client { get; set; }
 
-        public Dictionary<string, Action<string>> Events = new();
+        public NetworkStream? Stream { get; set; }
+
+        public Dictionary<string, Action<string>> Events { get; set; } = [];
 
         public Socket(SocketType socketType, string hostname, int port)
         {
-            if (socketType == SocketType.Server)
+            Type = socketType;
+
+            if (Type == SocketType.Server)
             {
                 Listener = new TcpListener(IPAddress.Parse(hostname), port);
                 Listener.Start();
 
-                TcpClient tcpClient = Listener.AcceptTcpClient();
-
-                Stream = tcpClient.GetStream();
+                _ = Task.Run(HandleConnections);
             }
             else
             {
@@ -41,12 +42,23 @@ namespace EventSocket
                 Client.Connect(hostname, port);
 
                 Stream = Client.GetStream();
+
+                _ = Task.Run(() => HandleRequests(Stream));
             }
+        }
 
-            Reader = new StreamReader(Stream);
-            Writer = new StreamWriter(Stream);
+        public void HandleConnections()
+        {
+            while (true)
+            {
+                TcpClient tcpClient = Listener.AcceptTcpClient();
 
-            _ = Task.Run(() => HandleRequests());
+                Console.WriteLine($"Client {tcpClient.Client.RemoteEndPoint} is connected");
+
+                Clients.Add(tcpClient);                                                             //lock?
+
+                _ = Task.Run(() => HandleRequests(tcpClient.GetStream()));
+            }
         }
 
         public void On(string key, Action<string> value)
@@ -56,35 +68,87 @@ namespace EventSocket
 
         public void Emit(string key, string argument)
         {
-            Writer.WriteLine(key + '|' + argument);
-            Writer.Flush();
+            try
+            {
+                SocketMessage socketMessage = new(key, argument);
+
+                if (Type == SocketType.Client)
+                {
+                    socketMessage.MemoryStream.CopyTo(Stream);
+                }
+                else if (Type == SocketType.Server)
+                {
+                    foreach (var client in Clients)
+                    {
+                        socketMessage.MemoryStream.CopyTo(client.GetStream());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR: {ex.Message}");
+            }
         }
 
-        public void HandleRequests()
+        public void HandleRequests(NetworkStream stream)
         {
             while(true)
             {
-                string? message = Reader.ReadLine();
-
-                if (message is not null)
+                try
                 {
-                    string[] strings = message.Split('|');
+                    int messageLength = ConvertToInt(ReadBytes(stream, 4));
 
-                    Events[strings[0]].Invoke(strings[1]);
+                    using MemoryStream memoryStream = new MemoryStream(messageLength);
+                    memoryStream.Write(ReadBytes(stream, messageLength), 0, messageLength);
+                    memoryStream.Position = 0;
+
+                    SocketMessage message = new SocketMessage(memoryStream);
+
+                    if (Events.TryGetValue(message.Key, out Action<string> value))
+                    {
+                        value.Invoke(message.Argument);
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR: {ex.Message}");
+                    stream.Close();
+                    break;                                                                              //TODO
+                }
+            }
+
+            byte[] ReadBytes(NetworkStream stream, int count)
+            {
+
+                byte[] bytes = new byte[count];
+                stream.ReadExactly(bytes, 0, count);
+
+                return bytes;
+            }
+
+            int ConvertToInt(byte[] bytes)
+            {
+                if (BitConverter.IsLittleEndian)
+                    Array.Reverse(bytes);
+
+                return BitConverter.ToInt32(bytes, 0);
             }
         }
 
         ~Socket()
         {
-            Writer.Close();
-            Reader.Close();
-            Stream.Close();
+            Stream?.Close();
 
-            if (Listener is not null)
-                Listener.Stop();
-            else if (Client is not null)
-                Client.Close();
+            if (Clients is not null)                        //??
+            {
+                foreach(var client in Clients) 
+                { 
+                    client.Close();
+                }
+            }
+
+            Listener?.Stop();
+            Client?.Close();
         }
     }
 }
