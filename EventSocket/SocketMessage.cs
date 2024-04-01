@@ -1,72 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EventSocket
 {
-    internal class SocketMessage
+    public class SocketMessage : ISocketMessage<string, string>
     {
-        public string Key { get; set; }
-        public string Argument { get; set; }        //temp
-        public MemoryStream MemoryStream { get; set; }
+        public SocketMessage(string key, string argument) : base(key, argument)
+        { }
 
-        public SocketMessage(string key, string argument)
+        public SocketMessage(MemoryStream stream) : base(stream) 
+        { }
+
+        public override MemoryStream GetStream()
         {
-            Key = key;
-            Argument = argument;
+            MemoryStream memoryStream = new MemoryStream();
 
-            BuildStream();
-        }
+            //Empty first 4 bytes for describing messageLength
+            memoryStream.Write(new byte[4], 0, 4);
 
-        public SocketMessage(MemoryStream stream)
-        {
-            SocketMessage message = BuildSocketMessage(stream);
-
-            Key = message.Key;
-            Argument = message.Argument;
-            MemoryStream = message.MemoryStream;
-        }
-
-        private void BuildStream()
-        {
-            MemoryStream = new MemoryStream();
-
-            MemoryStream.Write(new byte[4], 0, 4);
-
-            using StreamWriter streamWriter = new(MemoryStream, leaveOpen: true);
+            //Writing key and argument
+            using StreamWriter streamWriter = new(memoryStream, leaveOpen: true);
             streamWriter.WriteLine(Key + '|' + Argument);
             streamWriter.Flush();
 
-            MemoryStream.Position = 0;
-            int messageLength = (int)MemoryStream.Length - 4;
+            //Changing state of first 4 bytes
+            memoryStream.Position = 0;
 
-            MemoryStream.Write(ConvertIntToBytes(messageLength), 0, 4);
-            MemoryStream.Position = 0;
+            int messageLength = (int)memoryStream.Length - 4;
+
+            memoryStream.Write(ConvertIntToBytes(messageLength), 0, 4);
+            memoryStream.Position = 0;
+
+            return memoryStream;
+
+
+            byte[] ConvertIntToBytes(int value)
+            {
+                byte[] bytes = BitConverter.GetBytes(value);
+
+                if (BitConverter.IsLittleEndian)
+                    Array.Reverse(bytes);
+
+                return bytes;
+            }
         }
 
-        private SocketMessage BuildSocketMessage(MemoryStream stream)
+        protected override ISocketMessage<string, string> ExtractSocketMessage(MemoryStream memoryStream)
         {
-            using StreamReader reader = new StreamReader(stream, leaveOpen: true);
+            //Depends on types
+            using StreamReader reader = new StreamReader(memoryStream, leaveOpen: true);
             string? message = reader.ReadLine();
 
             if (message == null)
                 throw new ArgumentException();
-            
+
             string[] strings = message.Split('|');
 
             return new SocketMessage(strings[0], strings[1]);
-        }
-
-        private byte[] ConvertIntToBytes(int value)
-        {
-            byte[] bytes = BitConverter.GetBytes(value);
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(bytes);
-
-            return bytes;
         }
     }
 }
