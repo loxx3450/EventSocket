@@ -1,13 +1,14 @@
 ﻿using EventSocket;
+using EventSocket.Sockets;
 
 const string hostname = "127.0.0.1";
 const int port = 8080;
 
-Socket<string, string> socket = new Socket<string, string>(SocketType.Server, hostname, port);
+Socket<string, string> socket = new ServerSocket<string, string>(hostname, port);
 
 socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
 
-SocketMessage message = new SocketMessage("MessageToClient", "Hello");
+SocketMessageText message = new SocketMessageText("MessageToClient", "Hello");
 
 while (true)
 {

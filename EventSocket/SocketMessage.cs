@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace EventSocket
 {
-    public class SocketMessage : ISocketMessage<string, string>
+    public class SocketMessageText : SocketMessage<string, string>
     {
-        public SocketMessage(string key, string argument) : base(key, argument)
+        public SocketMessageText(string key, string argument) : base(key, argument)
         { }
 
-        public SocketMessage(MemoryStream stream) : base(stream) 
+        public SocketMessageText(MemoryStream stream) : base(stream) 
         { }
 
         public override MemoryStream GetStream()
@@ -49,7 +49,7 @@ namespace EventSocket
             }
         }
 
-        protected override ISocketMessage<string, string> ExtractSocketMessage(MemoryStream memoryStream)
+        protected override SocketMessage<string, string> ExtractSocketMessage(MemoryStream memoryStream)
         {
             //Depends on types
             using StreamReader reader = new StreamReader(memoryStream, leaveOpen: true);
@@ -60,7 +60,7 @@ namespace EventSocket
 
             string[] strings = message.Split('|');
 
-            return new SocketMessage(strings[0], strings[1]);
+            return new SocketMessageText(strings[0], strings[1]);
         }
     }
 }

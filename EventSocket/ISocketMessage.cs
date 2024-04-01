@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace EventSocket
 {
-    public abstract class ISocketMessage<T, K>
+    public abstract class SocketMessage<T, K>
     {
         public T Key { get; set; }
         public K Argument { get; set; }
 
-        public ISocketMessage(MemoryStream stream)
+        public SocketMessage(MemoryStream stream)
         {
-            ISocketMessage<T, K> socketMessage = ExtractSocketMessage(stream);
+            SocketMessage<T, K> socketMessage = ExtractSocketMessage(stream);
 
             Key = socketMessage.Key;
             Argument = socketMessage.Argument;
         }
 
-        public ISocketMessage(T key, K argument)
+        public SocketMessage(T key, K argument)
         {
             Key = key;
             Argument = argument;
@@ -28,6 +28,6 @@ namespace EventSocket
         public abstract MemoryStream GetStream();
 
         //SocketMessage should be built based on suitable Stream
-        protected abstract ISocketMessage<T, K> ExtractSocketMessage(MemoryStream memoryStream);
+        protected abstract SocketMessage<T, K> ExtractSocketMessage(MemoryStream memoryStream);
     }
 }
