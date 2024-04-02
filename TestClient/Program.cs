@@ -1,4 +1,4 @@
-﻿using EventSocket;
+﻿using EventSocket.SocketMessages;
 using EventSocket.Sockets;
 
 const string hostname = "127.0.0.1";

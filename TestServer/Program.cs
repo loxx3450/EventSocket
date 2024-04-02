@@ -1,4 +1,4 @@
-﻿using EventSocket;
+﻿using EventSocket.SocketMessages;
 using EventSocket.Sockets;
 
 const string hostname = "127.0.0.1";
@@ -29,7 +29,7 @@ async Task CatchingConnections(ServerSocket server, List<Socket> sockets)
         Socket socket = await server.GetSocket();
         Console.WriteLine("Connected");
 
-        socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
+        socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));                           //TODO: setting dictionary
 
         sockets.Add(socket);
     }

@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using EventSocket.SocketMessages;
 
 namespace EventSocket.Sockets
 {
@@ -17,7 +18,7 @@ namespace EventSocket.Sockets
         public NetworkStream NetworkStream { get; set; }
 
         //Dictionary of Events
-        public Dictionary<string, Action<string>> Actions { get; set; } = [];
+        public Dictionary<object, Action<object>> Actions { get; set; } = [];                               //TOTHINK: do we only work with Actions??
 
         public Socket(NetworkStream networkStream)
         {
@@ -26,12 +27,12 @@ namespace EventSocket.Sockets
             _ = Task.Run(HandleRequests);
         }
 
-        public void On(string key, Action<string> action)
+        public void On(object key, Action<object> action)
         {
             Actions[key] = action;
         }
 
-        public void Emit(SocketMessageText socketMessage)
+        public void Emit(SocketMessage socketMessage)
         {
             try
             {
@@ -39,13 +40,15 @@ namespace EventSocket.Sockets
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"ERROR: {ex.Message}");                                                              //TODO:close connection
             }
         }
 
         //Stream gets incoming messages, interprets them and executes suitable callback
         public void HandleRequests()
         {
+            SocketMessageBuilder builder = new SocketMessageBuilder();
+
             while (true)
             {
                 try
@@ -57,25 +60,7 @@ namespace EventSocket.Sockets
                     memoryStream.Write(ReadBytes(messageLength), 0, messageLength);
                     memoryStream.Position = 0;
 
-                    #region interpretation in case of genetic message
-                    ////Interpretation                                                    //TODO: should be automatic
-                    //object key = null!;
-                    //object argument = null!;
-
-                    //if (nameof(T) is string && nameof(K) is string)
-                    //{
-                    //    SocketMessageText message = new SocketMessageText(memoryStream);
-
-                    //    key = message.Key;
-                    //    argument = message.Argument;
-                    //}
-                    //else
-                    //{
-                    //    continue;
-                    //}
-                    #endregion
-
-                    SocketMessageText message = new SocketMessageText(memoryStream);
+                    SocketMessage message = builder.GetSocketMessage(memoryStream);                                         //TODO:static??
 
                     //Executing callback
                     if (Actions.ContainsKey(message.Key))
