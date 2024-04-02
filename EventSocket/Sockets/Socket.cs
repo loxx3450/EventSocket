@@ -5,17 +5,26 @@ using System.Text;
 
 namespace EventSocket.Sockets
 {
-    public abstract class Socket
+    public enum SocketType
     {
+        ServerSocket,
+        ClientSocket
+    }
+
+    public class Socket
+    {
+        //Stream for sending and getting Messages
+        public NetworkStream NetworkStream { get; set; }
+
         //Dictionary of Events
         public Dictionary<string, Action<string>> Actions { get; set; } = [];
 
-        public Socket(string hostname, int port)
+        public Socket(NetworkStream networkStream)
         {
-            Init(hostname, port);
-        }
+            NetworkStream = networkStream;
 
-        public abstract void Init(string hostname, int port);
+            _ = Task.Run(HandleRequests);
+        }
 
         public void On(string key, Action<string> action)
         {
@@ -26,7 +35,7 @@ namespace EventSocket.Sockets
         {
             try
             {
-                SendMessage(socketMessage);
+                socketMessage.GetStream().CopyTo(NetworkStream);
             }
             catch (Exception ex)
             {
@@ -34,20 +43,18 @@ namespace EventSocket.Sockets
             }
         }
 
-        protected abstract void SendMessage(SocketMessageText socketMessage);
-
         //Stream gets incoming messages, interprets them and executes suitable callback
-        public void HandleRequests(NetworkStream stream)
+        public void HandleRequests()
         {
             while (true)
             {
                 try
                 {
-                    int messageLength = ConvertToInt(ReadBytes(stream, 4));
+                    int messageLength = ConvertToInt(ReadBytes(4));
 
                     //Getting Stream which contains Message
                     using MemoryStream memoryStream = new MemoryStream(messageLength);
-                    memoryStream.Write(ReadBytes(stream, messageLength), 0, messageLength);
+                    memoryStream.Write(ReadBytes(messageLength), 0, messageLength);
                     memoryStream.Position = 0;
 
                     #region interpretation in case of genetic message
@@ -79,16 +86,16 @@ namespace EventSocket.Sockets
                 catch (Exception ex)
                 {
                     Console.WriteLine($"ERROR: {ex.Message}");
-                    stream.Close();
+                    NetworkStream.Close();
                     break;                                                                              //TODO: how to close connection correctly
                 }
             }
 
-            byte[] ReadBytes(NetworkStream stream, int count)
+            byte[] ReadBytes(int count)
             {
 
                 byte[] bytes = new byte[count];
-                stream.ReadExactly(bytes, 0, count);
+                NetworkStream.ReadExactly(bytes, 0, count);
 
                 return bytes;
             }
@@ -100,6 +107,11 @@ namespace EventSocket.Sockets
 
                 return BitConverter.ToInt32(bytes, 0);
             }
+        }
+
+        ~Socket()
+        {
+            NetworkStream?.Close();
         }
     }
 }

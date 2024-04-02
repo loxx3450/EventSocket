@@ -8,55 +8,30 @@ using System.Threading.Tasks;
 
 namespace EventSocket.Sockets
 {
-    public class ServerSocket : Socket
+    public class ServerSocket
     {
+        public IPEndPoint EndPoint { get; private set; }
         public TcpListener Listener { get; set; }
-        public List<TcpClient> Clients { get; set; } = new List<TcpClient>();
 
         public ServerSocket(string hostname, int port)
-            : base(hostname, port)
-        { }
-
-        public override void Init(string hostname, int port)
         {
-            Listener = new TcpListener(IPAddress.Parse(hostname), port);
+            EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
+
+            Listener = new TcpListener(EndPoint);
             Listener.Start();
-
-            _ = Task.Run(HandleConnections);
         }
 
-        //Server gets new Clients and submits them to processing
-        private void HandleConnections()
+        public async Task<Socket> GetSocket()
         {
-            while (true)
-            {
-                TcpClient tcpClient = Listener.AcceptTcpClient();
+            TcpClient client = await Listener.AcceptTcpClientAsync();
 
-                Console.WriteLine($"Client {tcpClient.Client.RemoteEndPoint} is connected");
-
-                Clients.Add(tcpClient);                                                             //lock?
-
-                _ = Task.Run(() => HandleRequests(tcpClient.GetStream()));
-            }
-        }
-
-        //Sending Message to everybody who is connected to Server
-        protected override void SendMessage(SocketMessageText socketMessage)
-        {
-            foreach (var client in Clients)
-            {
-                socketMessage.GetStream().CopyTo(client.GetStream());
-            }
+            //Socket that is based on Stream To Client
+            return new Socket(client.GetStream());
         }
 
         ~ServerSocket()
         {
             Listener?.Stop();
-
-            foreach (var client in Clients)                 //??
-            {
-                client.Close();
-            }
         }
     }
 }
