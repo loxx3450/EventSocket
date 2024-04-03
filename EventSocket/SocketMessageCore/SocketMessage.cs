@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventSocket.SocketMessages
+namespace EventSocket.SocketMessageCore
 {
     public abstract class SocketMessage
     {
-        public string SocketMessageType { get; set; }       //TODO: should be set automatic
+        private string SocketMessageType;
         public object Key { get; set; }
         public object Argument { get; set; }
-
+        
         public SocketMessage(MemoryStream stream)
         {
             SocketMessage socketMessage = ExtractSocketMessage(stream);
@@ -21,11 +21,11 @@ namespace EventSocket.SocketMessages
             SocketMessageType = socketMessage.SocketMessageType;
         }
 
-        public SocketMessage(object key, object argument, string messageType)
+        public SocketMessage(object key, object argument)
         {
             Key = key;
             Argument = argument;
-            SocketMessageType = messageType;
+            SocketMessageType = GetType().Name;
         }
 
         public MemoryStream GetStream()
@@ -54,7 +54,7 @@ namespace EventSocket.SocketMessages
             return memoryStream;
         }
 
-        //MemoryStream contains key and argument
+        //MemoryStream contains key and argument; Position should be equal 1
         public abstract MemoryStream GetPayloadStream();
 
         private byte[] ConvertIntToBytes(int value)

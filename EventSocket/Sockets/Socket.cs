@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using EventSocket.SocketMessages;
+using EventSocket.SocketMessageCore;
 
 namespace EventSocket.Sockets
 {
@@ -20,11 +20,23 @@ namespace EventSocket.Sockets
         //Dictionary of Events
         public Dictionary<object, Action<object>> Actions { get; set; } = [];                               //TOTHINK: do we only work with Actions??
 
+        //Collection of supported SocketMessages
+        private List<Type> socketMessagesTypes = new List<Type>();
+
         public Socket(NetworkStream networkStream)
         {
             NetworkStream = networkStream;
 
             _ = Task.Run(HandleRequests);
+        }
+
+        //This method belongs to Socket's setup
+        public void AddSupportedSocketMessageType<T>() where T : SocketMessage
+        {
+            Type type = typeof(T);
+
+            if (!socketMessagesTypes.Contains(type))
+                socketMessagesTypes.Add(type);
         }
 
         public void On(object key, Action<object> action)
@@ -40,15 +52,14 @@ namespace EventSocket.Sockets
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR: {ex.Message}");                                                              //TODO:close connection
+                Console.WriteLine($"ERROR: {ex.Message}");
+                NetworkStream.Close();
             }
         }
 
         //Stream gets incoming messages, interprets them and executes suitable callback
         public void HandleRequests()
         {
-            SocketMessageBuilder builder = new SocketMessageBuilder();
-
             while (true)
             {
                 try
@@ -60,7 +71,7 @@ namespace EventSocket.Sockets
                     memoryStream.Write(ReadBytes(messageLength), 0, messageLength);
                     memoryStream.Position = 0;
 
-                    SocketMessage message = builder.GetSocketMessage(memoryStream);                                         //TODO:static??
+                    SocketMessage message = SocketMessageBuilder.GetSocketMessage(memoryStream, socketMessagesTypes);
 
                     //Executing callback
                     if (Actions.ContainsKey(message.Key))

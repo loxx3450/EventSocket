@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventSocket\EventSocket.csproj" />
+    <ProjectReference Include="..\TestSocketMessages\TestSocketMessages.csproj" />
   </ItemGroup>
 
 </Project>
