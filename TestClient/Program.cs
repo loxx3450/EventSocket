@@ -7,11 +7,11 @@ const int port = 8080;
 
 ClientSocket socket = new ClientSocket(hostname, port);
 
-Socket client = await socket.GetSocket();
+//Waiting for Socket from other side
+Socket client = await socket.GetSocket();                                                           //Possible BLOCKING
 
 //Socket's setup
-client.AddSupportedSocketMessageType<SocketMessageText>();
-client.On("MessageToClient", (message) => Console.WriteLine($"From Server: {message};"));
+SetupSocket(client);
 
 //Messages to send(Important: other side should support this types fo SocketMessage's)
 SocketMessageText messageText = new SocketMessageText("MessageToServer", "Hello");
@@ -28,5 +28,21 @@ while (true)
             client.Emit(messageText);
             break;
     }
-    
+}
+
+
+
+void SetupSocket(Socket socket)
+{
+    //1. Setting supported SocketMessage's Types for income
+    socket.AddSupportedSocketMessageType<SocketMessageText>();
+
+    //2. Setting callbacks
+    socket.On("MessageToClient", (message) => Console.WriteLine($"From Server: {message};"));
+
+    //3. Setting callbacks to events
+    socket.OnOtherSideIsDisconnected += (socket) =>
+    {
+        Environment.Exit(0);
+    };
 }

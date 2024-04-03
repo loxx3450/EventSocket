@@ -20,6 +20,9 @@ namespace EventSocket.Sockets
         private List<Type> socketMessagesTypes = new List<Type>();
 
 
+        //Event invokes when we catch exception that NetworkStream is closed
+        public event Action<Socket> OnOtherSideIsDisconnected;
+
         public Socket(NetworkStream networkStream)
         {
             NetworkStream = networkStream;
@@ -55,6 +58,9 @@ namespace EventSocket.Sockets
             catch (Exception ex)
             {
                 Console.WriteLine($"ERROR: {ex.Message}");
+
+                //Client's code should handle disconnection
+                OnOtherSideIsDisconnected?.Invoke(this);
                 NetworkStream.Close();
             }
         }
@@ -81,7 +87,11 @@ namespace EventSocket.Sockets
                 catch (Exception ex)
                 {
                     Console.WriteLine($"ERROR: {ex.Message}");
+
+                    //Client's code should handle disconnection
+                    OnOtherSideIsDisconnected.Invoke(this);
                     NetworkStream.Close();
+
                     break;                                                                              //TODO: how to close connection correctly
                 }
             }
