@@ -6,22 +6,19 @@ using EventSocket.SocketMessageCore;
 
 namespace EventSocket.Sockets
 {
-    public enum SocketType
-    {
-        ServerSocket,
-        ClientSocket
-    }
-
     public class Socket
     {
         //Stream for sending and getting Messages
         public NetworkStream NetworkStream { get; set; }
 
+
         //Dictionary of Events
         public Dictionary<object, Action<object>> Actions { get; set; } = [];                               //TOTHINK: do we only work with Actions??
 
+
         //Collection of supported SocketMessages
         private List<Type> socketMessagesTypes = new List<Type>();
+
 
         public Socket(NetworkStream networkStream)
         {
@@ -29,6 +26,7 @@ namespace EventSocket.Sockets
 
             _ = Task.Run(HandleRequests);
         }
+
 
         //This method belongs to Socket's setup
         public void AddSupportedSocketMessageType<T>() where T : SocketMessage
@@ -39,11 +37,15 @@ namespace EventSocket.Sockets
                 socketMessagesTypes.Add(type);
         }
 
+
+        //Creating new pair key-callback
         public void On(object key, Action<object> action)
         {
             Actions[key] = action;
         }
 
+
+        //Sending Message to Stream of other size. In case, when Stream is closed, throwing exception and closing our own Stream
         public void Emit(SocketMessage socketMessage)
         {
             try
@@ -57,6 +59,7 @@ namespace EventSocket.Sockets
             }
         }
 
+
         //Stream gets incoming messages, interprets them and executes suitable callback
         public void HandleRequests()
         {
@@ -64,16 +67,12 @@ namespace EventSocket.Sockets
             {
                 try
                 {
-                    int messageLength = ConvertToInt(ReadBytes(4));
+                    MemoryStream memoryStream = ReceiveMemoryStreamOfSocketMessage();                                   //Possible BLOCKING
 
-                    //Getting Stream which contains Message
-                    using MemoryStream memoryStream = new MemoryStream(messageLength);
-                    memoryStream.Write(ReadBytes(messageLength), 0, messageLength);
-                    memoryStream.Position = 0;
-
+                    //Building concrete SocketMessage basing on received Stream
                     SocketMessage message = SocketMessageBuilder.GetSocketMessage(memoryStream, socketMessagesTypes);
 
-                    //Executing callback
+                    //Executing callback in case of containing received key
                     if (Actions.ContainsKey(message.Key))
                     {
                         Actions[message.Key].Invoke(message.Argument);
@@ -86,6 +85,21 @@ namespace EventSocket.Sockets
                     break;                                                                              //TODO: how to close connection correctly
                 }
             }
+        }
+
+
+        //Waits for incoming message, reads first 4 bytes to get size of Message, gets full Message and returns it
+        private MemoryStream ReceiveMemoryStreamOfSocketMessage()
+        {
+            int messageLength = ConvertToInt(ReadBytes(4));
+
+            //Getting Stream which contains Message
+            MemoryStream memoryStream = new MemoryStream(messageLength);
+            memoryStream.Write(ReadBytes(messageLength), 0, messageLength);
+            memoryStream.Position = 0;
+
+            return memoryStream;
+
 
             byte[] ReadBytes(int count)
             {
@@ -105,6 +119,8 @@ namespace EventSocket.Sockets
             }
         }
 
+
+        //Closing Stream in case if he wasn't closed before
         ~Socket()
         {
             NetworkStream?.Close();
