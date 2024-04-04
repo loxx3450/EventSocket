@@ -2,11 +2,11 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using EventSocket.SocketMessageCore;
+using EventSocket.SocketEventMessageCore;
 
 namespace EventSocket.Sockets
 {
-    public class Socket
+    public class SocketEvent
     {
         //Stream for sending and getting Messages
         public NetworkStream NetworkStream { get; set; }
@@ -16,14 +16,14 @@ namespace EventSocket.Sockets
         public Dictionary<object, Action<object>> Actions { get; set; } = [];                               //TOTHINK: do we only work with Actions??
 
 
-        //Collection of supported SocketMessages
-        private List<Type> socketMessagesTypes = new List<Type>();
+        //Collection of supported SocketEventMessages's types
+        private List<Type> supportedMessagesTypes = new List<Type>();
 
 
         //Event invokes when we catch exception that NetworkStream is closed
-        public event Action<Socket> OnOtherSideIsDisconnected;
+        public event Action<SocketEvent> OnOtherSideIsDisconnected;
 
-        public Socket(NetworkStream networkStream)
+        public SocketEvent(NetworkStream networkStream)
         {
             NetworkStream = networkStream;
 
@@ -31,13 +31,13 @@ namespace EventSocket.Sockets
         }
 
 
-        //This method belongs to Socket's setup
-        public void AddSupportedSocketMessageType<T>() where T : SocketMessage
+        //This method belongs to SocketEvent's setup
+        public void AddSupportedMessageType<T>() where T : SocketEventMessage
         {
             Type type = typeof(T);
 
-            if (!socketMessagesTypes.Contains(type))
-                socketMessagesTypes.Add(type);
+            if (!supportedMessagesTypes.Contains(type))
+                supportedMessagesTypes.Add(type);
         }
 
 
@@ -49,11 +49,11 @@ namespace EventSocket.Sockets
 
 
         //Sending Message to Stream of other size. In case, when Stream is closed, throwing exception and closing our own Stream
-        public void Emit(SocketMessage socketMessage)
+        public void Emit(SocketEventMessage message)
         {
             try
             {
-                socketMessage.GetStream().CopyTo(NetworkStream);
+                message.GetStream().CopyTo(NetworkStream);
             }
             catch (Exception ex)
             {
@@ -73,10 +73,10 @@ namespace EventSocket.Sockets
             {
                 try
                 {
-                    MemoryStream memoryStream = ReceiveMemoryStreamOfSocketMessage();                                   //Possible BLOCKING
+                    MemoryStream memoryStream = ReceiveMemoryStreamOfMessage();                                   //Possible BLOCKING
 
-                    //Building concrete SocketMessage basing on received Stream
-                    SocketMessage message = SocketMessageBuilder.GetSocketMessage(memoryStream, socketMessagesTypes);
+                    //Building concrete SocketEventMessage basing on received Stream
+                    SocketEventMessage message = SocketEventMessageBuilder.GetSocketEventMessage(memoryStream, supportedMessagesTypes);
 
                     //Executing callback in case of containing received key
                     if (Actions.ContainsKey(message.Key))
@@ -99,7 +99,7 @@ namespace EventSocket.Sockets
 
 
         //Waits for incoming message, reads first 4 bytes to get size of Message, gets full Message and returns it
-        private MemoryStream ReceiveMemoryStreamOfSocketMessage()
+        private MemoryStream ReceiveMemoryStreamOfMessage()
         {
             int messageLength = ConvertToInt(ReadBytes(4));
 
@@ -131,9 +131,9 @@ namespace EventSocket.Sockets
 
 
         //Closing Stream in case if he wasn't closed before
-        ~Socket()
+        ~SocketEvent()
         {
-            NetworkStream?.Close();
+            NetworkStream.Close();
         }
     }
 }

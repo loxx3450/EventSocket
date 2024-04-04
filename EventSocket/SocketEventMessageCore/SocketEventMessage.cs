@@ -5,30 +5,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventSocket.SocketMessageCore
+namespace EventSocket.SocketEventMessageCore
 {
-    public abstract class SocketMessage
+    public abstract class SocketEventMessage
     {
-        private readonly string SocketMessageType;
+        private readonly string MessageType;
         public object Key { get; set; }
         public object Argument { get; set; }
         
 
         //Both constructors should be realized in the derived classes
-        public SocketMessage(MemoryStream stream)
+        public SocketEventMessage(MemoryStream stream)
         {
-            SocketMessage socketMessage = ExtractSocketMessage(stream);
+            SocketEventMessage socketMessage = ExtractSocketEventMessage(stream);
 
             Key = socketMessage.Key;
             Argument = socketMessage.Argument;
-            SocketMessageType = socketMessage.SocketMessageType;
+            MessageType = socketMessage.MessageType;
         }
 
-        public SocketMessage(object key, object argument)
+        public SocketEventMessage(object key, object argument)
         {
             Key = key;
             Argument = argument;
-            SocketMessageType = GetType().Name;
+            MessageType = GetType().Name;
         }
 
 
@@ -39,8 +39,8 @@ namespace EventSocket.SocketMessageCore
             //Empty first 4 bytes for describing messageLength
             memoryStream.Write(new byte[4], 0, 4);
 
-            //Writing SocketMessageType
-            WriteSocketMessageType(memoryStream);
+            //Writing MessageType
+            WriteMessageType(memoryStream);
 
             //Writing PayloadStream
             GetPayloadStream().CopyTo(memoryStream);
@@ -54,11 +54,11 @@ namespace EventSocket.SocketMessageCore
         }
 
 
-        //Writing SocketMessageType with StreamWriter
-        private void WriteSocketMessageType(MemoryStream memoryStream)
+        //Writing MessageType with StreamWriter
+        private void WriteMessageType(MemoryStream memoryStream)
         {
             using StreamWriter streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
-            streamWriter.WriteLine(SocketMessageType);
+            streamWriter.WriteLine(MessageType);
             streamWriter.Flush();
         }
 
@@ -89,7 +89,7 @@ namespace EventSocket.SocketMessageCore
         }        
 
 
-        //SocketMessage should be built based on suitable Stream
-        protected abstract SocketMessage ExtractSocketMessage(MemoryStream memoryStream);
+        //SocketEventMessage should be built based on suitable Stream
+        protected abstract SocketEventMessage ExtractSocketEventMessage(MemoryStream memoryStream);
     }
 }

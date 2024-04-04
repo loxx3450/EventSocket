@@ -1,19 +1,19 @@
-﻿using EventSocket.SocketMessageCore;
+﻿using EventSocket.SocketEventMessageCore;
 using EventSocket.Sockets;
-using TestSocketMessages;
+using TestSocketEventMessages;
 
 const string hostname = "127.0.0.1";
 const int port = 8080;
 
-ServerSocket socket = new ServerSocket(hostname, port);
+ServerSocketEvent socket = new ServerSocketEvent(hostname, port);
 
-List<Socket> sockets = new List<Socket>();
+List<SocketEvent> sockets = new List<SocketEvent>();
 
 _ = Task.Run(() => CatchingConnections(socket, sockets));
 
 
-//Messages to send(Important: other side should support these types fo SocketMessage's)
-SocketMessageText message = new SocketMessageText("MessageToClient", "Hello");
+//Messages to send(Important: other side should support these types fo SocketEventMessage's)
+SocketEventMessageText message = new SocketEventMessageText("MessageToClient", "Hello");
 
 while (true)
 {
@@ -27,28 +27,28 @@ while (true)
 
 
 
-async Task CatchingConnections(ServerSocket server, List<Socket> sockets)
+async Task CatchingConnections(ServerSocketEvent server, List<SocketEvent> sockets)
 {
     while(true)
     {
-        //Waiting for Socket from other side
-        Socket socket = await server.GetSocket();                                           //Possible BLOCKING
+        //Waiting for SocketEvent from other side
+        SocketEvent socket = await server.GetSocket();                                           //Possible BLOCKING
         Console.WriteLine("Connected");
 
         //Socket's setup
         SetupSocket(socket);
 
-        //Adding Socket to the colelction of Sockets(Network Streams) that are representing server side
+        //Adding SocketEvent to the colelction of Sockets(Network Streams) that are representing server side
         sockets.Add(socket);
     }
 }
 
 
-void SetupSocket(Socket socket)
+void SetupSocket(SocketEvent socket)
 {
     //1. Setting supported SocketMessage's Types for income
-    socket.AddSupportedSocketMessageType<SocketMessageInteger>();
-    socket.AddSupportedSocketMessageType<SocketMessageText>();
+    socket.AddSupportedMessageType<SocketEventMessageInteger>();
+    socket.AddSupportedMessageType<SocketEventMessageText>();
 
     //2. Setting callbacks
     socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));

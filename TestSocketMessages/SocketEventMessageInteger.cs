@@ -1,19 +1,19 @@
-﻿using EventSocket.SocketMessageCore;
+﻿using EventSocket.SocketEventMessageCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TestSocketMessages
+namespace TestSocketEventMessages
 {
-    public class SocketMessageInteger : SocketMessage
+    public class SocketEventMessageInteger : SocketEventMessage
     {
-        public SocketMessageInteger(string key, int argument)
+        public SocketEventMessageInteger(string key, int argument)
             : base(key, argument)
         { }
 
-        public SocketMessageInteger(MemoryStream stream)
+        public SocketEventMessageInteger(MemoryStream stream)
             : base(stream)
         { }
 
@@ -32,7 +32,7 @@ namespace TestSocketMessages
             return memoryStream;
         }
 
-        protected override SocketMessage ExtractSocketMessage(MemoryStream memoryStream)
+        protected override SocketEventMessage ExtractSocketEventMessage(MemoryStream memoryStream)
         {
             using StreamReader streamReader = new StreamReader(memoryStream, leaveOpen: true);
 
@@ -40,7 +40,7 @@ namespace TestSocketMessages
 
             string[] strings = payload.Split('|');
 
-            return new SocketMessageInteger(strings[0], Convert.ToInt32(strings[1]));
+            return new SocketEventMessageInteger(strings[0], Convert.ToInt32(strings[1]));
         }
     }
 }

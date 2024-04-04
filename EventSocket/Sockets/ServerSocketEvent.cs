@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace EventSocket.Sockets
 {
-    public class ServerSocket
+    public class ServerSocketEvent
     {
         public IPEndPoint EndPoint { get; private set; }
         public TcpListener Listener { get; set; }
 
-        public ServerSocket(string hostname, int port)
+        public ServerSocketEvent(string hostname, int port)
         {
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
 
@@ -21,15 +21,15 @@ namespace EventSocket.Sockets
             Listener.Start();
         }
 
-        public async Task<Socket> GetSocket()
+        public async Task<SocketEvent> GetSocket()
         {
             TcpClient client = await Listener.AcceptTcpClientAsync();
 
             //Socket that is based on Stream To Client
-            return new Socket(client.GetStream());
+            return new SocketEvent(client.GetStream());
         }
 
-        ~ServerSocket()
+        ~ServerSocketEvent()
         {
             Listener?.Stop();
         }
