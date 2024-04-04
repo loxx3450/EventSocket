@@ -13,6 +13,11 @@ namespace EventSocket.Sockets
         public IPEndPoint EndPoint { get; private set; }
         public TcpListener Listener { get; set; }
 
+
+        //Invokes when ServerSocket receives new Connection
+        public event Action<SocketEvent> OnClientIsConnected;
+
+
         public ServerSocketEvent(string hostname, int port)
         {
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
@@ -21,13 +26,38 @@ namespace EventSocket.Sockets
             Listener.Start();
         }
 
-        public async Task<SocketEvent> GetSocket()
+
+        public async Task<SocketEvent> GetSocketAsync()
         {
             TcpClient client = await Listener.AcceptTcpClientAsync();
 
             //Socket that is based on Stream To Client
             return new SocketEvent(client.GetStream());
         }
+
+
+        //User should be subscribed on the event OnClientIsConnected
+        public void StartAcceptingClients()
+        {
+            _ = Task.Run(HandleConnections);
+        }
+
+
+        private void HandleConnections()
+        {
+            while (true)
+            {
+                TcpClient client = Listener.AcceptTcpClient();
+
+                //Part of Debug
+                Console.WriteLine("Connected");                                         //TEMP
+
+                SocketEvent socketEvent = new SocketEvent(client.GetStream());
+
+                OnClientIsConnected?.Invoke(socketEvent);
+            }
+        }
+
 
         ~ServerSocketEvent()
         {

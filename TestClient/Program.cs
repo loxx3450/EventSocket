@@ -8,7 +8,7 @@ const int port = 8080;
 ClientSocketEvent socket = new ClientSocketEvent(hostname, port);
 
 //Waiting for SocketEvent from other side
-SocketEvent client = await socket.GetSocket();                                                           //Possible BLOCKING
+SocketEvent client = await socket.GetSocketAsync();                                                           //Possible BLOCKING
 
 //Socket's setup
 SetupSocket(client);

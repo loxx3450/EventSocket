@@ -9,7 +9,11 @@ ServerSocketEvent socket = new ServerSocketEvent(hostname, port);
 
 List<SocketEvent> sockets = new List<SocketEvent>();
 
-_ = Task.Run(() => CatchingConnections(socket, sockets));
+socket.OnClientIsConnected += SetupSocket;
+
+socket.StartAcceptingClients();
+
+//_ = Task.Run(() => CatchingConnections(socket, sockets));
 
 
 //Messages to send(Important: other side should support these types fo SocketEventMessage's)
@@ -32,7 +36,7 @@ async Task CatchingConnections(ServerSocketEvent server, List<SocketEvent> socke
     while(true)
     {
         //Waiting for SocketEvent from other side
-        SocketEvent socket = await server.GetSocket();                                           //Possible BLOCKING
+        SocketEvent socket = await server.GetSocketAsync();                                           //Possible BLOCKING
         Console.WriteLine("Connected");
 
         //Socket's setup
@@ -59,4 +63,6 @@ void SetupSocket(SocketEvent socket)
     {
         sockets.Remove(socket);
     };
+
+    sockets.Add(socket);
 }

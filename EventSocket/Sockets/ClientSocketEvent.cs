@@ -17,7 +17,7 @@ namespace EventSocket.Sockets
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
         }
 
-        public async Task<SocketEvent> GetSocket() 
+        public async Task<SocketEvent> GetSocketAsync() 
         {
             TcpClient client = new TcpClient();
 
