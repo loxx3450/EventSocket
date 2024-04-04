@@ -13,8 +13,9 @@ SocketEvent client = await socket.GetSocketAsync();                             
 //Socket's setup
 SetupSocket(client);
 
-//Messages to send(Important: other side should support this types fo SocketEventMessage's)
-SocketEventMessageText messageText = new SocketEventMessageText("MessageToServer", "Hello");
+//Messages to send(Important: other side should support these types fo SocketEventMessage's)
+SocketEventMessageText messageToServerText = new SocketEventMessageText("MessageToServer", "Hello");
+SocketEventMessageText messageToClientText = new SocketEventMessageText("MessageToOtherClient", "Hi, other client");
 SocketEventMessageInteger messageInteger = new SocketEventMessageInteger("IntegerToServer", 1234567890);
 
 while (true)
@@ -24,8 +25,11 @@ while (true)
         case "1":
             client.Emit(messageInteger);
             break;
+        case "2":
+            client.Emit(messageToClientText);
+            break;
         default:
-            client.Emit(messageText);
+            client.Emit(messageToServerText);
             break;
     }
 }
@@ -38,7 +42,8 @@ void SetupSocket(SocketEvent socket)
     socket.AddSupportedMessageType<SocketEventMessageText>();
 
     //2. Setting callbacks
-    socket.On("MessageToClient", (message) => Console.WriteLine($"From Server: {message};"));
+    socket.On("MessageToClientFromServer", (message) => Console.WriteLine($"From Server: {message};"));
+    socket.On("MessageToClientFromClient", (message) => Console.WriteLine($"From Other Client: {message};"));
 
     //3. Setting callbacks to events
     socket.OnOtherSideIsDisconnected += (socket) =>

@@ -11,13 +11,14 @@ List<SocketEvent> sockets = new List<SocketEvent>();
 
 socket.OnClientIsConnected += SetupSocket;
 
-socket.StartAcceptingClients();
 
-//_ = Task.Run(() => CatchingConnections(socket, sockets));
+//Clients will be connecting with us in other Thread and make logic of event OnClientIsConnected after success Connection
+socket.StartAcceptingClients();
 
 
 //Messages to send(Important: other side should support these types fo SocketEventMessage's)
-SocketEventMessageText message = new SocketEventMessageText("MessageToClient", "Hello");
+SocketEventMessageText messageFromClient = new SocketEventMessageText("MessageToClientFromClient", "Hello");
+SocketEventMessageText messageFromServer = new SocketEventMessageText("MessageToClientFromServer", "Hello");
 
 while (true)
 {
@@ -25,25 +26,7 @@ while (true)
 
     foreach (var s in sockets)
     {
-        s.Emit(message);
-    }
-}
-
-
-
-async Task CatchingConnections(ServerSocketEvent server, List<SocketEvent> sockets)
-{
-    while(true)
-    {
-        //Waiting for SocketEvent from other side
-        SocketEvent socket = await server.GetSocketAsync();                                           //Possible BLOCKING
-        Console.WriteLine("Connected");
-
-        //Socket's setup
-        SetupSocket(socket);
-
-        //Adding SocketEvent to the colelction of Sockets(Network Streams) that are representing server side
-        sockets.Add(socket);
+        s.Emit(messageFromServer);
     }
 }
 
@@ -58,11 +41,24 @@ void SetupSocket(SocketEvent socket)
     socket.On("MessageToServer", (message) => Console.WriteLine($"From Client: {message};"));
     socket.On("IntegerToServer", (integer) => Console.WriteLine($"From Client: {integer};"));
 
+    socket.On("MessageToOtherClient", (message) =>
+    {
+        foreach (var s in sockets)
+        {
+            //finding exact one(client, room...)
+
+            SocketEventMessageText messageFromClient = new SocketEventMessageText("MessageToClientFromClient", Convert.ToString(message));
+
+            s.Emit(messageFromClient);
+        }
+    });
+
     //3. Setting callbacks to events
     socket.OnOtherSideIsDisconnected += (socket) =>
     {
         sockets.Remove(socket);
     };
 
+    //Adding SocketEvent to the colelction of Sockets(Network Streams) that are representing server side
     sockets.Add(socket);
 }
