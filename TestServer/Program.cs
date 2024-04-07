@@ -1,5 +1,5 @@
-﻿using EventSocket.SocketEventMessageCore;
-using EventSocket.Sockets;
+﻿using SocketEventLibrary.SocketEventMessageCore;
+using SocketEventLibrary.Sockets;
 using TestSocketEventMessages;
 
 const string hostname = "127.0.0.1";

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventSocket\EventSocket.csproj" />
+    <ProjectReference Include="..\EventSocket\SocketEventLibrary.csproj" />
     <ProjectReference Include="..\TestSocketMessages\TestSocketEventMessages.csproj" />
   </ItemGroup>
 

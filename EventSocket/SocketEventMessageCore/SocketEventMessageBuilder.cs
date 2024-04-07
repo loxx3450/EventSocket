@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventSocket.SocketEventMessageCore
+namespace SocketEventLibrary.SocketEventMessageCore
 {
     internal static class SocketEventMessageBuilder
     {

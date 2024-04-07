@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventSocket.Sockets
+namespace SocketEventLibrary.Sockets
 {
     public class ClientSocketEvent
     {
@@ -17,6 +17,7 @@ namespace EventSocket.Sockets
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
         }
 
+        //Getting Socket, that represents Server-side
         public async Task<SocketEvent> GetSocketAsync()
         {
             TcpClient client = new TcpClient();

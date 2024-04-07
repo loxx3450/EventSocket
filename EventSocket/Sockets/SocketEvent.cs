@@ -2,9 +2,9 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using EventSocket.SocketEventMessageCore;
+using SocketEventLibrary.SocketEventMessageCore;
 
-namespace EventSocket.Sockets
+namespace SocketEventLibrary.Sockets
 {
     public class SocketEvent
     {
