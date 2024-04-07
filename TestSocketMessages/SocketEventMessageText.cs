@@ -8,14 +8,10 @@ using System.Threading.Tasks;
 
 namespace TestSocketEventMessages
 {
-    public class SocketEventMessageText : SocketEventMessage
+    public class SocketEventMessageText : SocketEventMessage, IRecoverable
     {
         public SocketEventMessageText(string key, string argument)
             : base(key, argument)
-        { }
-
-        public SocketEventMessageText(MemoryStream stream)
-            : base(stream)
         { }
 
         public override MemoryStream GetPayloadStream()
@@ -32,9 +28,8 @@ namespace TestSocketEventMessages
             return memoryStream;
         }
 
-        protected override SocketEventMessage ExtractSocketEventMessage(MemoryStream memoryStream)
+        public static SocketEventMessage RecoverSocketEventMessage(MemoryStream memoryStream)
         {
-            //Depends on types
             using StreamReader reader = new StreamReader(memoryStream, leaveOpen: true);
             string? message = reader.ReadLine();
 

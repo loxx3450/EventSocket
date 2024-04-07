@@ -15,15 +15,6 @@ namespace EventSocket.SocketEventMessageCore
         
 
         //Both constructors should be realized in the derived classes
-        public SocketEventMessage(MemoryStream stream)
-        {
-            SocketEventMessage socketMessage = ExtractSocketEventMessage(stream);
-
-            Key = socketMessage.Key;
-            Argument = socketMessage.Argument;
-            MessageType = socketMessage.MessageType;
-        }
-
         public SocketEventMessage(object key, object argument)
         {
             Key = key;
@@ -86,10 +77,6 @@ namespace EventSocket.SocketEventMessageCore
 
                 return bytes;
             }
-        }        
-
-
-        //SocketEventMessage should be built based on suitable Stream
-        protected abstract SocketEventMessage ExtractSocketEventMessage(MemoryStream memoryStream);
+        }
     }
 }

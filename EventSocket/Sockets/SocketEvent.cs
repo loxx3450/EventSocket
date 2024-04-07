@@ -33,7 +33,7 @@ namespace EventSocket.Sockets
 
         //This method belongs to SocketEvent's setup
         public void AddSupportedMessageType<T>()
-            where T : SocketEventMessage
+            where T : SocketEventMessage, IRecoverable
         {
             Type type = typeof(T);
 
@@ -84,6 +84,10 @@ namespace EventSocket.Sockets
                     {
                         Actions[message.Key].Invoke(message.Argument);
                     }
+                }
+                catch (InvalidCastException ex)                                                             //TODO: Exceptions
+                {
+                    Console.WriteLine($"ERROR: {ex.Message}");
                 }
                 catch (Exception ex)
                 {

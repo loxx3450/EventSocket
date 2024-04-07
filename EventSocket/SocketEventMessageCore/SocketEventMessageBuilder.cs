@@ -20,8 +20,12 @@ namespace EventSocket.SocketEventMessageCore
             //Getting Type of received SocketMessage
             Type type = GetTypeOfReceivedMessage(supportedTypes, messageType);
 
+            MethodInfo method = type.GetMethod("RecoverSocketEventMessage");
+
+            object[] args = new object[1] { stream };
+
             //We call constructor for concrete SocketEventMessage which will be build based on MemoryStream of Payload
-            return Activator.CreateInstance(type, stream) as SocketEventMessage ?? throw new Exception();
+            return method.Invoke(null, args) as SocketEventMessage ?? throw new Exception();
         }
 
 
@@ -45,7 +49,7 @@ namespace EventSocket.SocketEventMessageCore
                 }
             }
 
-            throw new Exception();
+            throw new InvalidCastException();
         }
     }
 }
