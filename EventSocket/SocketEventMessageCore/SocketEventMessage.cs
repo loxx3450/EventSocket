@@ -9,20 +9,24 @@ namespace EventSocket.SocketEventMessageCore
 {
     public abstract class SocketEventMessage
     {
-        private readonly string MessageType;
+        private readonly string messageType;
+
+
+        //Main Data of Message
         public object Key { get; set; }
-        public object Argument { get; set; }
+        public object Payload { get; set; }
         
 
-        //Both constructors should be realized in the derived classes
-        public SocketEventMessage(object key, object argument)
+        //Key and Payload should be initialized
+        public SocketEventMessage(object key, object payload)
         {
             Key = key;
-            Argument = argument;
-            MessageType = GetType().Name;
+            Payload = payload;
+            messageType = GetType().Name;
         }
 
 
+        //Every SocketEventMessage must have his Stream-implementation
         public MemoryStream GetStream()
         {
             MemoryStream memoryStream = new MemoryStream();
@@ -33,8 +37,8 @@ namespace EventSocket.SocketEventMessageCore
             //Writing MessageType
             WriteMessageType(memoryStream);
 
-            //Writing PayloadStream
-            GetPayloadStream().CopyTo(memoryStream);
+            //Writing DataStream
+            GetDataStream().CopyTo(memoryStream);
 
             //Changing state of MessageLength (is null at the moment)
             ChangeMessageLengthState(memoryStream);
@@ -49,13 +53,13 @@ namespace EventSocket.SocketEventMessageCore
         private void WriteMessageType(MemoryStream memoryStream)
         {
             using StreamWriter streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
-            streamWriter.WriteLine(MessageType);
+            streamWriter.WriteLine(messageType);
             streamWriter.Flush();
         }
 
 
-        //MemoryStream contains key and argument; Position should be equal 1
-        public abstract MemoryStream GetPayloadStream();
+        //MemoryStream contains key and payload; Position should be equal zero
+        public abstract MemoryStream GetDataStream();
 
 
         //Changing state of first 4 bytes

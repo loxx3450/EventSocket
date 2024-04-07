@@ -82,7 +82,7 @@ namespace EventSocket.Sockets
                     //Executing callback in case of containing received key
                     if (Actions.ContainsKey(message.Key))
                     {
-                        Actions[message.Key].Invoke(message.Argument);
+                        Actions[message.Key].Invoke(message.Payload);
                     }
                 }
                 catch (InvalidCastException ex)                                                             //TODO: Exceptions

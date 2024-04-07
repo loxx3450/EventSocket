@@ -14,13 +14,13 @@ namespace TestSocketEventMessages
             : base(key, argument)
         { }
 
-        public override MemoryStream GetPayloadStream()
+        public override MemoryStream GetDataStream()
         {
             MemoryStream memoryStream = new MemoryStream();
 
-            //Writing key and argument
+            //Writing key and payload
             using StreamWriter streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
-            streamWriter.WriteLine(Convert.ToString(Key) + '|' + Convert.ToString(Argument));
+            streamWriter.WriteLine(Convert.ToString(Key) + '|' + Convert.ToString(Payload));
             streamWriter.Flush();
 
             memoryStream.Position = 0;
@@ -31,12 +31,10 @@ namespace TestSocketEventMessages
         public static SocketEventMessage RecoverSocketEventMessage(MemoryStream memoryStream)
         {
             using StreamReader reader = new StreamReader(memoryStream, leaveOpen: true);
-            string? message = reader.ReadLine();
 
-            if (message == null)
-                throw new ArgumentException();
+            string? payload = reader.ReadLine() ?? throw new ArgumentException();
 
-            string[] strings = message.Split('|');
+            string[] strings = payload.Split('|');
 
             return new SocketEventMessageText(strings[0], strings[1]);
         }

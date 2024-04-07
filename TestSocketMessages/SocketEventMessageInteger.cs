@@ -13,12 +13,13 @@ namespace TestSocketEventMessages
             : base(key, argument)
         { }
 
-        public override MemoryStream GetPayloadStream()
+        public override MemoryStream GetDataStream()
         {
             MemoryStream memoryStream = new MemoryStream();
 
-            string payload = Convert.ToString(Key) + '|' + Convert.ToString(Convert.ToInt32(Argument));
+            string payload = Convert.ToString(Key) + '|' + Convert.ToString(Convert.ToInt32(Payload));
 
+            //Writing key and payload
             using StreamWriter streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
             streamWriter.WriteLine(payload);
             streamWriter.Flush();
