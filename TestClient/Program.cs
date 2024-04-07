@@ -50,4 +50,7 @@ void SetupSocket(SocketEvent socket)
     {
         Environment.Exit(0);
     };
+
+    socket.OnThrowedException += (ex) =>
+        Console.WriteLine(ex.Message);
 }

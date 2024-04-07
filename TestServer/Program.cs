@@ -40,7 +40,7 @@ while (true)
 void SetupSocket(SocketEvent socket)
 {
     //1. Setting supported SocketMessage's Types for income
-    //socket.AddSupportedMessageType<SocketEventMessageInteger>();
+    socket.AddSupportedMessageType<SocketEventMessageInteger>();
     socket.AddSupportedMessageType<SocketEventMessageText>();
 
     //2. Setting callbacks
@@ -64,6 +64,9 @@ void SetupSocket(SocketEvent socket)
     {
         sockets.Remove(socket);
     };
+
+    socket.OnThrowedException += (ex) =>
+        Console.WriteLine(ex.Message);
 
     //Adding SocketEvent to the colelction of Sockets(Network Streams) that are representing server side
     sockets.Add(socket);
