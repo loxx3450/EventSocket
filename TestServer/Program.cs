@@ -22,11 +22,17 @@ SocketEventMessageText messageFromServer = new SocketEventMessageText("MessageTo
 
 while (true)
 {
-    Console.ReadLine();
-
-    foreach (var s in sockets)
+    switch (Console.ReadLine())
     {
-        s.Emit(messageFromServer);
+        case "end":
+            socket.StopAcceptingClients();
+            break;
+        default:
+            foreach (var s in sockets)
+            {
+                s.Emit(messageFromServer);
+            }
+            break;
     }
 }
 

@@ -13,6 +13,9 @@ namespace EventSocket.Sockets
         public IPEndPoint EndPoint { get; private set; }
         public TcpListener Listener { get; set; }
 
+        //Thread that gets new Connections
+        private Thread connectionThread;
+
 
         //Invokes when ServerSocket receives new Connection
         public event Action<SocketEvent> OnClientIsConnected;
@@ -39,23 +42,35 @@ namespace EventSocket.Sockets
         //User should be subscribed on the event OnClientIsConnected
         public void StartAcceptingClients()
         {
-            _ = Task.Run(HandleConnections);
+            connectionThread = new Thread(HandleConnections);
+            connectionThread.Start();
+        }
+
+
+        //ServerSocket waits for the last client and then closes Thread for new Connections
+        public void StopAcceptingClients()
+        {
+            Listener.Stop();
+
+            connectionThread.Join();
         }
 
 
         private void HandleConnections()
         {
-            while (true)
+            try
             {
-                TcpClient client = Listener.AcceptTcpClient();
+                while (true)
+                {
+                    TcpClient client = Listener.AcceptTcpClient();
 
-                //Part of Debug
-                Console.WriteLine("Connected");                                         //TEMP
+                    SocketEvent socketEvent = new SocketEvent(client.GetStream());
 
-                SocketEvent socketEvent = new SocketEvent(client.GetStream());
-
-                OnClientIsConnected?.Invoke(socketEvent);
+                    OnClientIsConnected?.Invoke(socketEvent);
+                }
             }
+            catch (SocketException)
+            { }
         }
 
 

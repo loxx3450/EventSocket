@@ -32,7 +32,8 @@ namespace EventSocket.Sockets
 
 
         //This method belongs to SocketEvent's setup
-        public void AddSupportedMessageType<T>() where T : SocketEventMessage
+        public void AddSupportedMessageType<T>()
+            where T : SocketEventMessage
         {
             Type type = typeof(T);
 
@@ -89,7 +90,7 @@ namespace EventSocket.Sockets
                     Console.WriteLine($"ERROR: {ex.Message}");
 
                     //Client's code should handle disconnection
-                    OnOtherSideIsDisconnected.Invoke(this);
+                    OnOtherSideIsDisconnected?.Invoke(this);
                     NetworkStream.Close();
 
                     break;                                                                              //TODO: how to close connection correctly
