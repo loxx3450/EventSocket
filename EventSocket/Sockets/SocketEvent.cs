@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using SocketEventLibrary.Exceptions;
 using SocketEventLibrary.SocketEventMessageCore;
 
 namespace SocketEventLibrary.Sockets
@@ -13,15 +14,22 @@ namespace SocketEventLibrary.Sockets
 
 
         //Dictionary of Events
-        public Dictionary<object, Action<object>> Actions { get; set; } = [];                               //TOTHINK: do we only work with Actions??
+        public Dictionary<object, Action<object>> actions = [];
 
 
         //Collection of supported SocketEventMessages's types
-        private List<Type> supportedMessagesTypes = new List<Type>();
+        private readonly List<Type> supportedMessagesTypes = [];
 
 
         //Event invokes when we catch exception that NetworkStream is closed
-        public event Action<SocketEvent> OnOtherSideIsDisconnected;
+        public event Action<SocketEvent>? OnOtherSideIsDisconnected;
+
+        //Event invokes when we want to disconnect
+        public event Action<SocketEvent>? OnDisconnecting;
+
+        //Event invokes by catching Exception from Builder
+        public event Action<SocketEventMessageBuilderException>? OnThrowedException;
+
 
         public SocketEvent(NetworkStream networkStream)
         {
@@ -45,24 +53,20 @@ namespace SocketEventLibrary.Sockets
         //Creating new pair key-callback
         public void On(object key, Action<object> action)
         {
-            Actions[key] = action;
+            actions[key] = action;
         }
 
 
-        //Sending Message to Stream of other size. In case, when Stream is closed, throwing exception and closing our own Stream
+        //Sending Message to Stream of the other Side. In case, when Stream is closed, throwing exception and closing our own Stream
         public void Emit(SocketEventMessage message)
         {
             try
             {
                 message.GetStream().CopyTo(NetworkStream);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"ERROR: {ex.Message}");
-
-                //Client's code should handle disconnection
-                OnOtherSideIsDisconnected?.Invoke(this);
-                NetworkStream.Close();
+                HandleDisconnection();
             }
         }
 
@@ -80,24 +84,20 @@ namespace SocketEventLibrary.Sockets
                     SocketEventMessage message = SocketEventMessageBuilder.GetSocketEventMessage(memoryStream, supportedMessagesTypes);
 
                     //Executing callback in case of containing received key
-                    if (Actions.ContainsKey(message.Key))
+                    if (actions.ContainsKey(message.Key))
                     {
-                        Actions[message.Key].Invoke(message.Payload);
+                        actions[message.Key].Invoke(message.Payload);
                     }
-                }
-                catch (InvalidCastException ex)                                                             //TODO: Exceptions
-                {
-                    Console.WriteLine($"ERROR: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"ERROR: {ex.Message}");
 
-                    //Client's code should handle disconnection
-                    OnOtherSideIsDisconnected?.Invoke(this);
-                    NetworkStream.Close();
-
-                    break;                                                                              //TODO: how to close connection correctly
+                    memoryStream.Close();
+                }
+                catch (SocketEventMessageBuilderException ex)
+                {
+                    OnThrowedException?.Invoke(ex);
+                }
+                catch (Exception)
+                {
+                    HandleDisconnection();
                 }
             }
         }
@@ -132,6 +132,22 @@ namespace SocketEventLibrary.Sockets
 
                 return BitConverter.ToInt32(bytes, 0);
             }
+        }
+
+
+        //Method is called when the other side is not more available
+        public void HandleDisconnection()
+        {
+            //Client's code should handle disconnection
+            OnOtherSideIsDisconnected?.Invoke(this);
+            NetworkStream.Close();
+        }
+
+
+        //User should describe logic of Disconnection and execute it to close Connection
+        public void Disconnect()
+        {
+            OnDisconnecting?.Invoke(this);
         }
 
 

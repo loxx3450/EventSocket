@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketEventLibrary.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,32 +10,38 @@ namespace SocketEventLibrary.SocketEventMessageCore
 {
     internal static class SocketEventMessageBuilder
     {
+        private const string METHOD_NAME = "RecoverSocketEventMessage";
+
         //On this phase MemoryStream contains messageType as a string and payload
         public static SocketEventMessage GetSocketEventMessage(MemoryStream stream, List<Type> supportedTypes)
         {
             //Read SocketEventMessage's MessageType from stream
             string messageType = ReadMessageType(stream);
 
-            stream.Position = messageType.Length + 2;                                                         //TODO:TEMP
+            stream.Position = messageType.Length + 2;                                                         //TODO: use something normal
 
             //Getting Type of received SocketMessage
             Type type = GetTypeOfReceivedMessage(supportedTypes, messageType);
 
-            MethodInfo method = type.GetMethod("RecoverSocketEventMessage");
-
+            //Preparations for calling Method
+            MethodInfo? method = type.GetMethod(METHOD_NAME);
             object[] args = new object[1] { stream };
 
-            //We call constructor for concrete SocketEventMessage which will be build based on MemoryStream of Payload
-            return method.Invoke(null, args) as SocketEventMessage ?? throw new Exception();
+            //We call static method to get concrete SocketEventMessage from MemoryStream
+            return method?.Invoke(null, args) as SocketEventMessage ??
+                throw new SocketEventMessageBuilderException
+                    (SocketEventMessageBuilderException.BUILDER_METHOD_RETURNED_NULL);
         }
 
 
-        //Getting string implementation of sent SocketEventMessage's Type
+        //Getting string implementation of received SocketEventMessage's Type
         private static string ReadMessageType(MemoryStream stream) 
         {
             using StreamReader reader = new StreamReader(stream, leaveOpen: true);
 
-            return reader.ReadLine() ?? throw new Exception();
+            return reader.ReadLine() ??
+                throw new SocketEventMessageBuilderException
+                    (SocketEventMessageBuilderException.BUILDER_MESSAGE_TYPE_NOT_FOUND);
         }
 
 
@@ -49,7 +56,8 @@ namespace SocketEventLibrary.SocketEventMessageCore
                 }
             }
 
-            throw new InvalidCastException();
+            throw new SocketEventMessageBuilderException
+                (SocketEventMessageBuilderException.BUILDER_NOT_SUPPORTED_TYPE);
         }
     }
 }

@@ -40,7 +40,7 @@ while (true)
 void SetupSocket(SocketEvent socket)
 {
     //1. Setting supported SocketMessage's Types for income
-    socket.AddSupportedMessageType<SocketEventMessageInteger>();
+    //socket.AddSupportedMessageType<SocketEventMessageInteger>();
     socket.AddSupportedMessageType<SocketEventMessageText>();
 
     //2. Setting callbacks
