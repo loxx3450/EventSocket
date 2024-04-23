@@ -21,6 +21,15 @@ namespace SocketEventLibrary.SocketEventMessageCore
         // ========== public methods: ==========
         //
 
+        /// <summary>
+        /// Finds a suitable type of SocketEventMessage by reading Stream 
+        /// and builds the inheritance of SocketEventMessage.
+        /// Otherwise, throws exception.
+        /// </summary>
+        /// <returns>The inheritance of SocketEventMessage, based on incoming MemoryStream.</returns>
+        /// <exception cref="SocketEventMessageBuilderException">
+        /// Thrown when the Builder couldn't find the suitable type.
+        /// </exception>
         //On this phase MemoryStream contains messageType as a string and payload
         public static SocketEventMessage GetSocketEventMessage(MemoryStream stream, List<Type> supportedTypes)
         {
