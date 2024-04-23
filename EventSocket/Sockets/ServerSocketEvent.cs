@@ -12,19 +12,61 @@ namespace SocketEventLibrary.Sockets
 {
     public class ServerSocketEvent
     {
-        //TcpListener
-        public IPEndPoint EndPoint { get; private set; }
-        private readonly TcpListener listener;
+        //
+        // ========== public properties: ==========
+        //
 
+        /// <value>
+        /// Represents the endpoint of Server.
+        /// </value>
+        public IPEndPoint EndPoint { get; private set; }
+
+
+        //
+        // ========== events: ==========
+        //
+
+        /// <summary>
+        /// Is invoked, when ServerSocket receives new Connection.
+        /// </summary>
+        public event Action<SocketEvent>? OnClientIsConnected;
+
+
+        //
+        // ========== private fields: ==========
+        //
+
+        //TcpListener
+        private readonly TcpListener listener;
 
         //Thread that gets new Connections
         private Thread connectionThread;
 
 
-        //Invokes when ServerSocket receives new Connection
-        public event Action<SocketEvent>? OnClientIsConnected;
+        //
+        // ========== constructors: ==========
+        //
 
-
+        /// <summary>
+        /// Initialized TcpListener starts to handle new <c>Connections</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when the problem with 
+        /// <paramref name="hostname"/> or <paramref name="port"/> 
+        /// is occured
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the problem with 
+        /// <paramref name="hostname"/> or <paramref name="port"/> 
+        /// is occured
+        /// </exception>
+        /// <exception cref="SocketException">
+        /// Thrown when the problem with 
+        /// <paramref name="hostname"/> or <paramref name="port"/> 
+        /// is occured
+        /// </exception>
+        /// <param name="hostname">hostname of Server.</param>
+        /// <param name="port">port of Server.</param>
         public ServerSocketEvent(string hostname, int port)
         {
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
@@ -36,7 +78,18 @@ namespace SocketEventLibrary.Sockets
         }
 
 
-        //Getting first Socket, which will try to connect
+        //
+        // ========== public methods: ==========
+        //
+
+        /// <summary>
+        /// Gets async the first <c>Socket</c>, which will try to connect.
+        /// </summary>
+        /// <returns>The object of SocketEvent, that is based on Stream of Server.</returns>
+        /// <exception cref="ServerSocketEventException">
+        /// Occures when the <c>socket of Server</c> is closed 
+        /// or doesn't accept new connections
+        /// </exception>
         public async Task<SocketEvent> GetSocketAsync()
         {
             try
@@ -46,21 +99,26 @@ namespace SocketEventLibrary.Sockets
                 //Socket that is based on Stream To Client
                 return new SocketEvent(client.GetStream());
             }
-            catch (SocketException ex) 
+            catch (SocketException)
             {
-                throw new ServerSocketEventException(ServerSocketEventException.SERVER_SOCKET_CLOSED_LISTENER);
+                throw new ServerSocketEventException
+                    (ServerSocketEventException.SERVER_SOCKET_CLOSED_LISTENER);
             }
         }
 
 
-        //User should be subscribed on the event OnClientIsConnected
+        /// <summary>
+        /// <c>The Server</c> starts to accept new clients.
+        /// The event <c>OnClientIsConnected</c> should be realized
+        /// </summary>
         public void StartAcceptingClients()
         {
             connectionThread.Start();
         }
-        
 
-        //Closing Thread, that accepts new Clients, by closing Listener
+        /// <summary>
+        /// Closes Thread, that accepts new Clients, by closing Listener
+        /// </summary>
         public void StopAcceptingClients()
         {
             listener.Stop();
@@ -69,7 +127,12 @@ namespace SocketEventLibrary.Sockets
         }
 
 
-        //Waiting for new Client, creating new SocketEvent and invoking Event, that new Client has connected
+        //
+        // ========== private fields: ==========
+        //
+
+        //Waits for new Client, creates new SocketEvent
+        //and invokes Event, that new Client has connected
         private void HandleConnections()
         {
             try
@@ -88,6 +151,11 @@ namespace SocketEventLibrary.Sockets
         }
 
 
+        //
+        // ========== destructor: ==========
+        //
+
+        //Stops TcpListener and closes Thread
         ~ServerSocketEvent()
         {
             listener.Stop();

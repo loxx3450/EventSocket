@@ -10,14 +10,34 @@ namespace SocketEventLibrary.Sockets
 {
     public class ClientSocketEvent
     {
+        //
+        // ========== public properties: ==========
+        //
+
+        /// <value>
+        /// Represents the endpoint of Server.
+        /// </value>
         public IPEndPoint EndPoint { get; private set; }
+
+
+        //
+        // ========== constructors: ==========
+        //
 
         public ClientSocketEvent(string hostname, int port)
         {
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
         }
 
-        //Getting Socket, that represents Server-side
+
+        //
+        // ========== public methods: ==========
+        //
+
+        /// <summary>
+        /// Gets async Socket, that represents Server-side.
+        /// </summary>
+        /// <returns>The object of SocketEvent, that is based on Stream of Client.</returns>
         public async Task<SocketEvent> GetSocketAsync()
         {
             TcpClient client = new TcpClient();

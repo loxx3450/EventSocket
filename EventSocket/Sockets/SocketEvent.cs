@@ -9,37 +9,76 @@ namespace SocketEventLibrary.Sockets
 {
     public class SocketEvent
     {
-        //Stream for sending and getting Messages
+        //
+        // ========== public properties: ==========
+        //
+
+        /// <value>
+        /// Stream for sending and getting Messages.
+        /// </value>
         public NetworkStream NetworkStream { get; set; }
 
 
-        //Dictionary of Events
-        public Dictionary<object, Action<object>> actions = [];
+        //
+        // ========== events: ==========
+        //
 
+        /// <summary>
+        /// Event invokes when we catch the exception 
+        /// that NetworkStream of <c>other side</c> is closed.
+        /// </summary>
+        public event Action<SocketEvent>? OnOtherSideIsDisconnected;
+
+        /// <summary>
+        /// Event invokes when we want to disconnect.
+        /// </summary>
+        public event Action<SocketEvent>? OnDisconnecting;
+
+        /// <summary>
+        /// Event invokes by catching Exception from SocketEventMessageBuilder.
+        /// </summary>
+        public event Action<SocketEventMessageBuilderException>? OnThrowedException;
+
+
+        //
+        // ========== private fields: ==========
+        //
+
+        //Dictionary of Events
+        private Dictionary<object, Action<object>> actions = [];
 
         //Collection of supported SocketEventMessages's types
         private readonly List<Type> supportedMessagesTypes = [];
 
-
-        //Event invokes when we catch exception that NetworkStream is closed
-        public event Action<SocketEvent>? OnOtherSideIsDisconnected;
-
-        //Event invokes when we want to disconnect
-        public event Action<SocketEvent>? OnDisconnecting;
-
-        //Event invokes by catching Exception from Builder
-        public event Action<SocketEventMessageBuilderException>? OnThrowedException;
+        //Task for getting incoming Messages
+        private Task gettingRequests;
 
 
+        //
+        // ========== constructors: ==========
+        //
+
+        /// <summary>
+        /// Initializes SocketEvent and starts to accept Messages
+        /// </summary>
+        /// <param name="networkStream">The NetworkStream of other side.</param>
         public SocketEvent(NetworkStream networkStream)
         {
             NetworkStream = networkStream;
 
-            _ = Task.Run(HandleRequests);
+            gettingRequests = Task.Run(HandleRequests);
         }
 
 
-        //This method belongs to SocketEvent's setup
+        //
+        // ========== public methods: ==========
+        //
+
+        /// <summary>
+        /// It will be possible to get Messages of types "T".
+        /// </summary>
+        /// <typeparam name="T">Type "T" is a type of Message that we can get from other side. 
+        /// It should be a SocketEventMessage and realize interface IRecoverable</typeparam>
         public void AddSupportedMessageType<T>()
             where T : SocketEventMessage, IRecoverable
         {
@@ -50,14 +89,21 @@ namespace SocketEventLibrary.Sockets
         }
 
 
-        //Creating new pair key-callback
+        /// <summary>
+        /// Creates new pair key-callback
+        /// </summary>
+        /// <param name="key">Key of Action.</param>
+        /// <param name="action">The callback, that will be called due to the Message's type(Key).</param>
         public void On(object key, Action<object> action)
         {
             actions[key] = action;
         }
 
-
-        //Sending Message to Stream of the other Side. In case, when Stream is closed, throwing exception and closing our own Stream
+        /// <summary>
+        /// Sends Message to the NetStream of the other side.
+        /// If NetStream is closed, handles the logic of <c>Disconnection</c>
+        /// and closes NetStream.
+        /// </summary>
         public void Emit(SocketEventMessage message)
         {
             try
@@ -70,9 +116,21 @@ namespace SocketEventLibrary.Sockets
             }
         }
 
+        /// <summary>
+        /// Calls the Event 'OnDisconnecting', if it's not null.
+        /// </summary>
+        public void Disconnect()
+        {
+            OnDisconnecting?.Invoke(this);
+        }
+
+
+        //
+        // ========== private methods: ==========
+        //
 
         //Stream gets incoming messages, interprets them and executes suitable callback
-        public void HandleRequests()
+        private void HandleRequests()
         {
             while (true)
             {
@@ -136,20 +194,19 @@ namespace SocketEventLibrary.Sockets
 
 
         //Method is called when the other side is not more available
-        public void HandleDisconnection()
+        private void HandleDisconnection()
         {
             //Client's code should handle disconnection
             OnOtherSideIsDisconnected?.Invoke(this);
             NetworkStream.Close();
+
+            gettingRequests.Dispose();
         }
 
 
-        //User should describe logic of Disconnection and execute it to close Connection
-        public void Disconnect()
-        {
-            OnDisconnecting?.Invoke(this);
-        }
-
+        //
+        // ========== destructor: ==========
+        //
 
         //Closing Stream in case if he wasn't closed before
         ~SocketEvent()
