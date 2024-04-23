@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace SocketEventLibrary.Sockets
 {
+    /// <summary>
+    /// Class <c>ClientSocketEvent</c> provides method
+    /// to get instance of SocketEvent and to work with Server.
+    /// </summary>
     public class ClientSocketEvent
     {
         //
@@ -37,7 +41,7 @@ namespace SocketEventLibrary.Sockets
         /// <summary>
         /// Gets async Socket, that represents Server-side.
         /// </summary>
-        /// <returns>The object of SocketEvent, that is based on Stream of Client.</returns>
+        /// <returns>The object of SocketEvent, that is based on Stream of Server.</returns>
         public async Task<SocketEvent> GetSocketAsync()
         {
             TcpClient client = new TcpClient();

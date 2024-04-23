@@ -7,6 +7,10 @@ using SocketEventLibrary.SocketEventMessageCore;
 
 namespace SocketEventLibrary.Sockets
 {
+    /// <summary>
+    /// Class <c>SocketEvent</c> provides methods and events 
+    /// to communicate with the other side.
+    /// </summary>
     public class SocketEvent
     {
         //

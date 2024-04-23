@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 
 namespace SocketEventLibrary.Sockets
 {
+    /// <summary>
+    /// Class <c>ServerSocketEvent</c> provides methods and events 
+    /// to accept new Clients in the special way.
+    /// </summary>
     public class ServerSocketEvent
     {
         //
@@ -85,7 +89,7 @@ namespace SocketEventLibrary.Sockets
         /// <summary>
         /// Gets async the first <c>Socket</c>, which will try to connect.
         /// </summary>
-        /// <returns>The object of SocketEvent, that is based on Stream of Server.</returns>
+        /// <returns>The object of SocketEvent, that is based on Stream of Client.</returns>
         /// <exception cref="ServerSocketEventException">
         /// Occures when the <c>socket of Server</c> is closed 
         /// or doesn't accept new connections
