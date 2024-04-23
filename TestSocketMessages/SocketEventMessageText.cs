@@ -14,7 +14,7 @@ namespace TestSocketEventMessages
             : base(key, argument)
         { }
 
-        public override MemoryStream GetDataStream()
+        protected override MemoryStream GetDataStream()
         {
             MemoryStream memoryStream = new MemoryStream();
 

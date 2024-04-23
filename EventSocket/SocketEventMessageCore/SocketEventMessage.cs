@@ -7,17 +7,43 @@ using System.Threading.Tasks;
 
 namespace SocketEventLibrary.SocketEventMessageCore
 {
+    /// <summary>
+    /// Class <c>SocketEventMessage</c> models a pair of <c>Key</c> and <c>Payload</c>
+    /// </summary>
     public abstract class SocketEventMessage
     {
+        //
+        // ========== public properties: ==========
+        //
+
+        /// <value>
+        /// Property <c>Key</c> represents the identifier of SocketEventMessage and could be represented as any type.
+        /// </value>
+        public object Key { get; set; }
+
+        /// <value>
+        /// Property <c>Payload</c> represents the payload(argument) of SocketEventMessage and could be represented as any type.
+        /// </value>
+        public object Payload { get; set; }
+
+
+        //
+        // ========== private fields: ==========
+        //
+
+        //Should be written at Stream
         private readonly string messageType;
 
 
-        //Main Data of Message
-        public object Key { get; set; }
-        public object Payload { get; set; }
-        
+        //
+        // ========== constructors: ==========
+        //
 
-        //Key and Payload should be initialized
+        /// <summary>
+        /// Initializes <c>Key</c> and <c>Payload</c>.
+        /// </summary>
+        /// <param name="key">Identifier of Message.</param>
+        /// <param name="payload">Payload(argument) of Message</param>
         public SocketEventMessage(object key, object payload)
         {
             Key = key;
@@ -26,7 +52,30 @@ namespace SocketEventLibrary.SocketEventMessageCore
         }
 
 
-        //Every SocketEventMessage must have his Stream-implementation
+        //
+        // ========== abstract methods: ==========
+        //
+
+        /// <summary>
+        /// Builds MemoryStream that is based on 
+        /// SocketEventMessage's <c>Key</c> and <c>Payload</c>. 
+        /// MemoryStream should contain key and payload
+        /// and the position of Stream should be equal zero.
+        /// </summary>
+        /// <returns>The instance of MemoryStream.</returns>
+        protected abstract MemoryStream GetDataStream();
+
+
+        //
+        // ========== public methods: ==========
+        //
+
+        /// <summary>
+        /// Builds MemoryStream that is based on the whole
+        /// SocketEventMessage. Executes abstract method 'GetDataStream'.
+        /// </summary>
+        /// <returns>The instance of MemoryStream 
+        /// with the whole info about Message.</returns>
         public MemoryStream GetStream()
         {
             MemoryStream memoryStream = new MemoryStream();
@@ -49,7 +98,11 @@ namespace SocketEventLibrary.SocketEventMessageCore
         }
 
 
-        //Writing MessageType with StreamWriter
+        //
+        // ========== private methods: ==========
+        //
+
+        //Writes MessageType with StreamWriter
         private void WriteMessageType(MemoryStream memoryStream)
         {
             using StreamWriter streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
@@ -57,12 +110,7 @@ namespace SocketEventLibrary.SocketEventMessageCore
             streamWriter.Flush();
         }
 
-
-        //MemoryStream contains key and payload; Position should be equal zero
-        public abstract MemoryStream GetDataStream();
-
-
-        //Changing state of first 4 bytes
+        //Changes state of first 4 bytes
         private void ChangeMessageLengthState(MemoryStream memoryStream)
         {
             memoryStream.Position = 0;

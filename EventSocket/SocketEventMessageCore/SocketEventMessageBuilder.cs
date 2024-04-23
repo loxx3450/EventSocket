@@ -10,7 +10,16 @@ namespace SocketEventLibrary.SocketEventMessageCore
 {
     internal static class SocketEventMessageBuilder
     {
+        //
+        // ========== private fields: ==========
+        //
+
         private const string METHOD_NAME = "RecoverSocketEventMessage";
+
+
+        //
+        // ========== public methods: ==========
+        //
 
         //On this phase MemoryStream contains messageType as a string and payload
         public static SocketEventMessage GetSocketEventMessage(MemoryStream stream, List<Type> supportedTypes)
@@ -33,6 +42,10 @@ namespace SocketEventLibrary.SocketEventMessageCore
                     (SocketEventMessageBuilderException.BUILDER_METHOD_RETURNED_NULL);
         }
 
+
+        //
+        // ========== private methods: ==========
+        //
 
         //Getting string implementation of received SocketEventMessage's Type
         private static string ReadMessageType(MemoryStream stream) 
