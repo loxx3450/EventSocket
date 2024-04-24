@@ -52,7 +52,7 @@ namespace SocketEventLibrary.Sockets
         //
 
         /// <summary>
-        /// Initialized TcpListener starts to handle new <c>Connections</c>.
+        /// Initializes TcpListener.
         /// </summary>
         /// <exception cref="ArgumentNullException">
         /// Thrown when the problem with 
@@ -76,9 +76,6 @@ namespace SocketEventLibrary.Sockets
             EndPoint = new IPEndPoint(IPAddress.Parse(hostname), port);
 
             listener = new TcpListener(EndPoint);
-            listener.Start();
-
-            connectionThread = new Thread(HandleConnections);
         }
 
 
@@ -112,11 +109,14 @@ namespace SocketEventLibrary.Sockets
 
 
         /// <summary>
-        /// <c>The Server</c> starts to accept new clients.
+        /// <c>Server</c> starts to accept new clients in other Thread.
         /// The event <c>OnClientIsConnected</c> should be realized
         /// </summary>
         public void StartAcceptingClients()
         {
+            listener.Start();
+
+            connectionThread = new Thread(HandleConnections);
             connectionThread.Start();
         }
 
