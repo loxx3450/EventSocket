@@ -6,9 +6,19 @@ using System.Threading.Tasks;
 
 namespace SocketEventLibrary.SocketEventMessageCore
 {
+    /// <summary>
+    /// Provides the absract method 'RecoverSocketEventMessage',
+    /// that should be realized to build Message basing on MemoryStream, 
+    /// that SocketEvent gets from other side of Connection.
+    /// </summary>
     public interface IRecoverable
     {
-        //SocketEventMessage should be built based on suitable Stream
+        /// <summary>
+        /// Builds SocketEventMessage basing on Stream.
+        /// </summary>
+        /// <param name="memoryStream">Stream of SocketEventMessage.</param>
+        /// <returns>The instance of SocketEventMessage, 
+        /// that is representing the incoming Stream</returns>
         static abstract SocketEventMessage RecoverSocketEventMessage(MemoryStream memoryStream);
     }
 }
