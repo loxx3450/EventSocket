@@ -46,7 +46,7 @@ void SetupSocket(SocketEvent socket)
     socket.On("MessageToClientFromClient", (message) => Console.WriteLine($"From Other Client: {message};"));
 
     //3. Setting callbacks to events
-    socket.OnOtherSideIsDisconnected += (socket) =>
+    socket.OnOtherSideIsDisconnected += () =>
     {
         Environment.Exit(0);
     };

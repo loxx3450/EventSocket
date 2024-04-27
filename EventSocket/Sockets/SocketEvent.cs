@@ -31,12 +31,12 @@ namespace SocketEventLibrary.Sockets
         /// Event invokes when we catch the exception 
         /// that NetworkStream of <c>other side</c> is closed.
         /// </summary>
-        public event Action<SocketEvent>? OnOtherSideIsDisconnected;
+        public event Action? OnOtherSideIsDisconnected;
 
         /// <summary>
         /// Event invokes when we want to disconnect.
         /// </summary>
-        public event Action<SocketEvent>? OnDisconnecting;
+        public event Action? OnDisconnecting;
 
         /// <summary>
         /// Event invokes by catching Exception from SocketEventMessageBuilder.
@@ -125,7 +125,10 @@ namespace SocketEventLibrary.Sockets
         /// </summary>
         public void Disconnect()
         {
-            OnDisconnecting?.Invoke(this);
+            OnDisconnecting?.Invoke();
+
+            NetworkStream.Close();
+            gettingRequests.Dispose();
         }
 
 
@@ -201,9 +204,9 @@ namespace SocketEventLibrary.Sockets
         private void HandleDisconnection()
         {
             //Client's code should handle disconnection
-            OnOtherSideIsDisconnected?.Invoke(this);
-            NetworkStream.Close();
+            OnOtherSideIsDisconnected?.Invoke();
 
+            NetworkStream.Close();
             gettingRequests.Dispose();
         }
 
@@ -216,6 +219,7 @@ namespace SocketEventLibrary.Sockets
         ~SocketEvent()
         {
             NetworkStream.Close();
+            gettingRequests.Dispose();
         }
     }
 }

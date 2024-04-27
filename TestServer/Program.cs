@@ -60,7 +60,7 @@ void SetupSocket(SocketEvent socket)
     });
 
     //3. Setting callbacks to events
-    socket.OnOtherSideIsDisconnected += (socket) =>
+    socket.OnOtherSideIsDisconnected += () =>
     {
         sockets.Remove(socket);
     };
