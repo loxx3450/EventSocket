@@ -151,7 +151,7 @@ namespace SocketEventLibrary.Sockets
                     //Executing callback in case of containing received key
                     if (actions.ContainsKey(message.Key))
                     {
-                        actions[message.Key].Invoke(message.Payload);
+                        _ = Task.Run(() => actions[message.Key].Invoke(message.Payload));
                     }
 
                     memoryStream.Close();
